@@ -3,4 +3,5 @@
     <string name="internal_sensors">Internal Sensors</string>
     <string name="imu">IMU</string>
     <string name="_0">0</string>
+    <string name="record">record</string>
 </resources>
