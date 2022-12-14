@@ -4,6 +4,7 @@ import static java.lang.System.currentTimeMillis;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -16,6 +17,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class InternalActivity extends AppCompatActivity implements SensorEventListener{
 
@@ -29,6 +32,7 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
     float EWMA = 0;
     float compFilt = 0;
     float imu = 0;
+    boolean rec = true;
     private float [] internal = new float[3];
 
     @Override
@@ -40,14 +44,36 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
         gyroscope = findViewById(R.id.angle2);
 
         recordButton = findViewById(R.id.record);
-        recordButton.setOnClickListener(this::onRecord);
+        recordButton.setOnClickListener(this::pressRecord);
     }
 
-    private void onRecord(View view) {
+    @SuppressLint("SetTextI18n")
+    private void pressRecord(View view) {
         long time = currentTimeMillis();
-        //TODO: Record
-        System.out.println(time);
 
+        if (rec) {
+            recordButton.setText("Stop");
+            rec = false;
+            //TODO: Record
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+
+
+
+                }
+            }, 10000);
+            //TODO: Stop and save
+
+        }
+        else if(!rec){
+            recordButton.setText("Record");
+            rec = true;
+
+            //TODO: Stop and save
+
+
+        }
     }
 
     protected void onResume() {
