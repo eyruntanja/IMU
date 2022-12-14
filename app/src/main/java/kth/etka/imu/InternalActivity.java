@@ -1,24 +1,25 @@
 package kth.etka.imu;
 
-import static java.lang.System.currentTimeMillis;
-
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Arrays;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+
 
 public class InternalActivity extends AppCompatActivity implements SensorEventListener{
 
@@ -28,42 +29,51 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
     private Sensor acc;
     private Sensor gyro;
 
+    String filename;
+    File file;
     float x_acc, y_acc, z_acc;
     float EWMA = 0;
     float compFilt = 0;
     float imu = 0;
-    boolean rec = true;
-    private float [] internal = new float[3];
+    final float [] internal = new float[3];
+    boolean rec;
+    String s, st;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_internal);
 
+        sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+
         Internal = findViewById(R.id.angle1);
         gyroscope = findViewById(R.id.angle2);
 
+        acc = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
+        rec = true;
         recordButton = findViewById(R.id.record);
         recordButton.setOnClickListener(this::pressRecord);
     }
 
-    @SuppressLint("SetTextI18n")
     private void pressRecord(View view) {
-        long time = currentTimeMillis();
-
         if (rec) {
             recordButton.setText("Stop");
             rec = false;
             //TODO: Record
-            new Timer().schedule(new TimerTask() {
+            saveData(s + ";" + st);
+            new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
 
-
-
+                    recordButton.setText("Record");
+                    rec = true;
+                    System.out.println(file);
                 }
             }, 10000);
-            //TODO: Stop and save
+
+
 
         }
         else if(!rec){
@@ -72,14 +82,33 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
 
             //TODO: Stop and save
 
+        }
+    }
 
+    private void saveData(String content){
+        filename = "data.csv";
+        try {
+            file = new File(filename);
+            // if file doesnt exists, then create it
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(content);
+            bw.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener((SensorEventListener) this, acc, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener((SensorEventListener) this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
+
+        sensorManager.registerListener(this, acc, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
@@ -110,7 +139,7 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
 
             EWMA = 0.5F*EWMA+(1-0.5F)*z_acc;
 
-            String s = "Acceleration: " + EWMA;
+            s = "Acceleration: " + EWMA;
             //System.out.println(s);
             Internal.setText(s);
         }
@@ -121,7 +150,7 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
             float z = event.values[2];
 
             compFilt = 0.9F*z_acc+(1-0.9F)*x;
-            String st = "Gyro + accelerator: " + compFilt;
+            st = "Gyro + accelerator: " + compFilt;
 
             gyroscope.setText(st);
         }
