@@ -85,16 +85,16 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
         if (rec) {
             recordButton.setText("Stop");
             Time = currentTimeMillis();
-            for (int i = 0; i<ewma.size();i++){
-                Time += i;
-                time.add(Time);
-            }
             ewma.add(EWMA);
             comple.add(compFilt);
             recordButton.setOnClickListener(this::stopRecord);
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
+                    for (int i = 0; i<ewma.size();i++){
+                        Time += i;
+                        time.add(Time);
+                    }
                     stopRecord();
                 }
             }, 10000);
@@ -105,14 +105,14 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
     private void stopRecord(View view) {
         recordButton.setText("Record");
         saveData();
-
     }
 
     private void stopRecord() {
         recordButton.setText("Record");
         saveData();
-
     }
+
+    /*
     private void function(long timeVal,float Ewma,float Compliment){
         for (int i = 0; i<ewma.size();i++){
             timeVal += i;
@@ -122,7 +122,7 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
         comple.add(Compliment);
         saveData();
 
-    }
+    }*/
 
     private void saveData(){
         filename = "data.csv";
@@ -171,7 +171,7 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
 
             x_acc = (float) Math.toDegrees(Math.atan(y/(Math.sqrt(Math.pow(x,2) + Math.pow(y,2)))));
             y_acc = (float) Math.toDegrees(Math.atan(x/(Math.sqrt(Math.pow(x,2) + Math.pow(y,2)))));
-            z_acc = (float) Math.toDegrees(Math.atan((Math.sqrt(Math.pow(x,2) + Math.pow(y,2))/z)));
+            z_acc = (float) Math.toDegrees(Math.atan((z/Math.sqrt(Math.pow(x,2) + Math.pow(y,2)))));
 
             internal [0]= x_acc;
             internal [1]= y_acc;
