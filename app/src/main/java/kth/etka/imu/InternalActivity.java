@@ -2,6 +2,7 @@ package kth.etka.imu;
 
 import static java.lang.System.currentTimeMillis;
 
+import android.annotation.SuppressLint;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -79,6 +80,7 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
         recordButton.setOnClickListener(this::pressRecord);
     }
 
+    @SuppressLint("SetTextI18n")
     private void pressRecord(View view) {
         if (rec) {
             recordButton.setText("Stop");
@@ -123,6 +125,7 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
     }
 
     private void saveData(){
+        filename = "data.csv";
         File directoryDownload = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         File logDir = new File (directoryDownload, "data"); //Creates a new folder in DOWNLOAD directory
         logDir.mkdirs();
