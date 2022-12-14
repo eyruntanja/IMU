@@ -16,11 +16,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +43,19 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
     final float [] internal = new float[3];
     boolean rec;
     String s, st;
+
+
+    public List<Long> getTime() {
+        return time;
+    }
+
+    public List<Float> getEwma() {
+        return ewma;
+    }
+
+    public List<Float> getComple() {
+        return comple;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +83,11 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
         if (rec) {
             recordButton.setText("Stop");
             Time = currentTimeMillis();
+            for (int i = 0; i<ewma.size();i++){
+                Time += i;
+                time.add(Time);
+            }
+            saveData(time,ewma,comple);
             recordButton.setOnClickListener(this::stopRecord);
             new Handler().postDelayed(new Runnable() {
                 @Override
@@ -94,63 +109,24 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
 
     }
 
-    private void saveData(String content) {
-        filename = "data.csv";
+    private void saveData(List<Long> timeVal, List<Float> Ewma, List<Float> Compliment){
         File directoryDownload = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        file = new File(directoryDownload, filename);
-        directoryDownload.mkdirs();
+        File logDir = new File (directoryDownload, "data"); //Creates a new folder in DOWNLOAD directory
+        logDir.mkdirs();
+        File file = new File(logDir, filename);
         FileOutputStream outputStream = null;
-        for (int i = 0; i<Time.size();i++){
-            Time+=i;
-            time.add(Time);
-        }
         try {
             outputStream = new FileOutputStream(file, false);
-            for (int i = 0; i < time.size(); i++) {
+            for (int i = 0; i < ewma.size(); i++) {
                 outputStream.write((time.get(i) + ",").getBytes());
                 outputStream.write((ewma.get(i) + ",").getBytes());
                 outputStream.write((comple.get(i) + "\n").getBytes());
             }
-        } catch (IOException e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
-    }
 
-    /*private void saveData(String content){
-        filename = "data.csv";
-        File directoryDownload = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        file = new File(directoryDownload, filename);
-        directoryDownload.mkdirs();
-        System.out.println(directoryDownload);
-        try {
-            file = new File(directoryDownload, filename);
-            FileWriter fw = new FileWriter(file.getAbsoluteFile());
-            BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(content);
-            bw.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }*/
-
-    public void readData (){
-        BufferedReader br = null;
-        try {
-            String sCurrentLine;
-            br = new BufferedReader(new FileReader(filename));
-            while ((sCurrentLine = br.readLine()) != null) {
-                System.out.println(sCurrentLine);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (br != null)br.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
     }
 
     protected void onResume() {
@@ -171,6 +147,7 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
 
     @Override
     public void onSensorChanged(SensorEvent event){
+
         if (event.sensor.getType()==Sensor.TYPE_ACCELEROMETER) {
             float x = event.values[0];
             float y = event.values[1];
@@ -185,6 +162,7 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
             internal [2]= z_acc;
 
             EWMA = 0.5F*EWMA+(1-0.5F)*z_acc;
+            EWMA = Math.round(EWMA);
             ewma.add(EWMA);
             s = "Acceleration: " + EWMA;
             Internal.setText(s);
@@ -196,6 +174,7 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
             float z = event.values[2];
 
             compFilt = 0.9F*z_acc+(1-0.9F)*x;
+            compFilt = Math.round(compFilt);
             comple.add(compFilt);
             st = "Gyro + accelerator: " + compFilt;
 
