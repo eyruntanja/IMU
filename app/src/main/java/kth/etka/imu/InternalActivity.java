@@ -87,7 +87,8 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
                 Time += i;
                 time.add(Time);
             }
-            saveData(time,ewma,comple);
+            ewma.add(EWMA);
+            comple.add(compFilt);
             recordButton.setOnClickListener(this::stopRecord);
             new Handler().postDelayed(new Runnable() {
                 @Override
@@ -101,15 +102,27 @@ public class InternalActivity extends AppCompatActivity implements SensorEventLi
 
     private void stopRecord(View view) {
         recordButton.setText("Record");
+        saveData();
 
     }
 
     private void stopRecord() {
         recordButton.setText("Record");
+        saveData();
+
+    }
+    private void function(long timeVal,float Ewma,float Compliment){
+        for (int i = 0; i<ewma.size();i++){
+            timeVal += i;
+            time.add(timeVal);
+        }
+        ewma.add(Ewma);
+        comple.add(Compliment);
+        saveData();
 
     }
 
-    private void saveData(List<Long> timeVal, List<Float> Ewma, List<Float> Compliment){
+    private void saveData(){
         File directoryDownload = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         File logDir = new File (directoryDownload, "data"); //Creates a new folder in DOWNLOAD directory
         logDir.mkdirs();
